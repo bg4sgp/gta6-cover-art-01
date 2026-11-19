@@ -745,7 +745,7 @@ def main():
 
     cover4 = compose_cover({
         "layout": "strips", "grade": "vice", "caption": "Palms and Peril",
-        "subtitle": "Leonida", "spread": False, "spread_photo": None,
+        "subtitle": "Vice City · Leonida", "spread": False, "spread_photo": None,
         "panels": [{"kind": "photo", "photo": "pier", "oy": -0.7},
                    {"kind": "scene", "scene": "skyline-dusk"},
                    {"kind": "photo", "photo": "boulevard", "oy": -0.65},
