@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vice Panels — Leonida Cover Studio</title>
+<link rel="stylesheet" href="./style.css">
+</head>
+<body>
+<main class="app">
+  <section class="controls">
+    <h1>Vice Panels</h1>
+    <p class="tagline">Turn your photos into GTA-style cover art: a multi-panel
+    Leonida collage with bold caption lettering and a sunset or neon grade,
+    exported as a PNG. Everything happens on your machine — photos are never
+    uploaded.</p>
+
+    <h2>1 · Your photos</h2>
+    <label class="file-label">Add photos
+      <input id="photoFiles" type="file" accept="image/*" multiple>
+    </label>
+    <div id="tray" class="tray" aria-label="Loaded photos"></div>
+    <p class="hint">Pick a panel on the cover, then click a photo to fill it.
+    Drag the photo inside the preview to reposition it, and use the zoom
+    slider to crop tighter.</p>
+    <label class="spread-toggle">
+      <input id="spread" type="checkbox">
+      Spread one photo across all panels
+    </label>
+
+    <h2>2 · The selected panel</h2>
+    <p id="panelLabel" class="panel-label">Panel 1</p>
+    <label>Painted scene
+      <select id="scenePick">
+        <option value="beach">Sunset beach</option>
+        <option value="neon">Neon street</option>
+        <option value="pier">The pier</option>
+        <option value="skyline">Downtown dusk</option>
+        <option value="palms">Palm shade</option>
+        <option value="speedway">Speedway</option>
+      </select>
+    </label>
+    <label>Photo zoom
+      <input id="zoom" type="range" min="1" max="3" step="0.05" value="1">
+    </label>
+
+    <h2>3 · Words and style</h2>
+    <label>Caption
+      <input id="caption" type="text" maxlength="42" value="Vice Heat">
+    </label>
+    <label>Subtitle
+      <input id="subtitle" type="text" maxlength="30" value="Leonida">
+    </label>
+    <label>Layout
+      <select id="layoutPick">
+        <option value="classic">Classic collage</option>
+        <option value="hero">Hero panel</option>
+        <option value="strips">Wide strips</option>
+      </select>
+    </label>
+    <label>Colour grade
+      <select id="gradePick">
+        <option value="sunset">Vice sunset</option>
+        <option value="neon">Neon night</option>
+        <option value="day">Leonida day</option>
+      </select>
+    </label>
+
+    <h2>4 · Export</h2>
+    <div class="size-row" role="group" aria-label="Export size">
+      <button type="button" class="size-btn" data-size="square">1080 × 1080</button>
+      <button type="button" class="size-btn is-active" data-size="portrait">1080 × 1350</button>
+      <button type="button" class="size-btn" data-size="landscape">1920 × 1080</button>
+    </div>
+    <button id="exportBtn" type="button" class="export-btn">Export PNG — 1080 x 1350</button>
+    <p id="status" class="status" role="status"></p>
+  </section>
+  <section class="stage-wrap">
+    <canvas id="stage" width="1080" height="1350" aria-label="Cover preview"></canvas>
+  </section>
+</main>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>

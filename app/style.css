@@ -1,0 +1,274 @@
+/* Vice Panels editor theme: a dark studio wall, neon accents, paper preview. */
+
+:root {
+  --ink: #f4eefc;
+  --muted: #b9aed6;
+  --panel: #1a1233;
+  --panel-edge: #32235f;
+  --pink: #ff4fa3;
+  --cyan: #2fd6f2;
+  --gold: #ffd23f;
+  --paper: #f7f1e3;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Noto Sans", "Liberation Sans", sans-serif;
+  background: radial-gradient(1200px 700px at 20% -10%, #3b1160 0%, #150b2e 55%, #0b0618 100%);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+.app {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 28px;
+}
+
+.controls {
+  width: 340px;
+  flex: 0 0 340px;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 14px;
+  padding: 20px 22px 24px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+}
+
+.controls h1 {
+  margin: 0 0 6px;
+  font-size: 30px;
+  letter-spacing: 0.5px;
+  background: linear-gradient(92deg, #fff 20%, var(--pink) 60%, var(--cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.controls h2 {
+  margin: 20px 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--gold);
+}
+
+.tagline {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+  margin: 8px 0 0;
+}
+
+.controls label {
+  display: block;
+  margin: 10px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.controls input[type="text"],
+.controls select {
+  display: block;
+  width: 100%;
+  margin-top: 5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-edge);
+  background: #0f0a22;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.controls input[type="range"] {
+  width: 100%;
+  margin-top: 6px;
+  accent-color: var(--pink);
+}
+
+.file-label {
+  display: inline-block;
+  padding: 9px 14px;
+  border-radius: 9px;
+  background: linear-gradient(92deg, var(--pink), #b83ae0);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.file-label input {
+  display: none;
+}
+
+.tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tray button {
+  border: 2px solid transparent;
+  border-radius: 9px;
+  padding: 0;
+  background: #0f0a22;
+  cursor: pointer;
+  overflow: hidden;
+  width: 64px;
+  height: 64px;
+}
+
+.tray button img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tray button:hover {
+  border-color: var(--cyan);
+}
+
+.spread-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  color: var(--ink);
+  font-size: 13.5px;
+}
+
+.spread-toggle input {
+  accent-color: var(--pink);
+  width: 16px;
+  height: 16px;
+}
+
+.panel-label {
+  margin: 2px 0 4px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.size-row {
+  display: flex;
+  gap: 8px;
+}
+
+.size-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 8px;
+  border: 1px solid var(--panel-edge);
+  background: #0f0a22;
+  color: var(--muted);
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.size-btn.is-active {
+  border-color: var(--cyan);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--cyan);
+}
+
+.export-btn {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(92deg, var(--pink), #ff8a3c);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.export-btn:hover {
+  filter: brightness(1.08);
+}
+
+.status {
+  min-height: 18px;
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--cyan);
+}
+
+.stage-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 10px 0 30px;
+}
+
+#stage {
+  max-width: 100%;
+  max-height: calc(100vh - 60px);
+  width: auto;
+  height: auto;
+  background: var(--paper);
+  border-radius: 4px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  cursor: grab;
+  touch-action: none;
+}
+
+#stage:active {
+  cursor: grabbing;
+}
+
+/* Screenshot mode: the cover alone on the page, at its natural pixel size. */
+body.shot-cover {
+  background: var(--paper);
+}
+
+body.shot-cover .controls {
+  display: none;
+}
+
+body.shot-cover .app {
+  display: block;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+body.shot-cover .stage-wrap {
+  display: block;
+  padding: 0;
+}
+
+body.shot-cover #stage {
+  max-width: none;
+  max-height: none;
+  border-radius: 0;
+  box-shadow: none;
+  cursor: default;
+}
+
+@media (max-width: 900px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .controls {
+    width: 100%;
+    flex: none;
+  }
+}
