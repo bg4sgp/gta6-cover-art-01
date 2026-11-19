@@ -1,17 +1,16 @@
-// Vice Panels — the hand-in program for the gta6-cover-art-01 bounty.
+// Vice Panels — Leonida Cover Studio: the hand-in program for
+// gta6-cover-art-01 (Node 22, standard library only, no network).
 //
-// The entry itself is the static web app in app/: plain files a desktop
-// browser opens offline, with no build step and no network request. This
-// program copies app/ and screenshots/ into the output directory and writes
-// the dossier the judge reads, using the vendored make.fun library in
-// vendor/makefun-app.ts (the kit's own copy, left unchanged).
-//
-// Run it the way the grader does, with the output directory standing in for
-// /output:
+// The app itself is the static site under app/ (open app/index.html in a
+// desktop browser, offline). This program copies app/ and screenshots/
+// into the output directory and writes dossier.json there with the
+// vendored make.fun dossier library, byte for byte as the grader's own
+// copy of the library would write it. It runs twice at grading and both
+// runs must produce identical bytes, so nothing here depends on time,
+// randomness or the environment beyond the output path.
 //
 //   mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts
-//
-// To try the app first: `node serve.ts`, then open http://localhost:8080.
+// (MAKEFUN_OUTPUT_DIR stands in for /output outside the grader.)
 
 import { cpSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -23,19 +22,22 @@ const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? '/output';
 
 mkdirSync(outputDir, { recursive: true });
 cpSync(join(repoRoot, 'app'), join(outputDir, 'app'), { recursive: true });
-mkdirSync(join(outputDir, 'screenshots'), { recursive: true });
-if (existsSync(join(repoRoot, 'screenshots'))) {
-  cpSync(join(repoRoot, 'screenshots'), join(outputDir, 'screenshots'), { recursive: true });
+
+const shotsDir = join(repoRoot, 'screenshots');
+if (existsSync(shotsDir)) {
+  mkdirSync(join(outputDir, 'screenshots'), { recursive: true });
+  cpSync(shotsDir, join(outputDir, 'screenshots'), { recursive: true });
 }
 
-// The caps are the gate's own: at most 4 screenshots of 256 KiB each, at
-// most 993 files and 48 MiB under app/, no app path over 1000 bytes, and the
-// dossier's source text capped at 160 KiB.
+// The gate's caps, passed to the library so an over-limit tree fails here
+// first rather than at the scorer: dossier text capped at 160 KiB, at most
+// 4 screenshots of at most 256 KiB each, app/ at most 993 entries and
+// 48 MiB with no path over 1000 bytes.
 const dossier = buildDossier(outputDir, {
-  text_max_bytes: 163840,
-  screenshots: { max: 4, max_bytes: 262144 },
+  text_max_bytes: 163_840,
+  screenshots: { max: 4, max_bytes: 262_144 },
   app_max_files: 993,
-  app_max_bytes: 50331648,
+  app_max_bytes: 50_331_648,
   app_path_max_bytes: 1000,
 });
 writeFileSync(join(outputDir, 'dossier.json'), dossier);

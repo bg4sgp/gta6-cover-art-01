@@ -1,65 +1,58 @@
-// A small static file server for trying the app locally: `node serve.ts`
-// serves app/ at http://localhost:8080 (or --port <n>). It reads each file
-// fresh from disk, answers with the content type the file's extension calls
-// for, and refuses paths that climb out of app/. Development convenience
-// only -- the app itself needs no server beyond any static host.
+// serve.ts — a small static file server for trying the app locally.
+//   node serve.ts [--port 8080]
+// Serves app/ at http://localhost:8080 with the content types the app
+// needs, and refuses anything that resolves outside app/. Node 22,
+// standard library only; a development convenience, nothing more.
 
-import { readFileSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
-import { extname, resolve, sep } from 'node:path';
+import { extname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const appRoot = resolve(fileURLToPath(new URL('./app', import.meta.url)));
-const portFlag = process.argv.indexOf('--port');
-const port = portFlag === -1 ? 8080 : Number(process.argv[portFlag + 1]) || 8080;
 
-const CONTENT_TYPES: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.mjs': 'text/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.webp': 'image/webp',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon',
-  '.woff2': 'font/woff2',
-  '.ttf': 'font/ttf',
-  '.wasm': 'application/wasm',
-  '.txt': 'text/plain; charset=utf-8',
-};
+const args = process.argv.slice(2);
+const portFlag = args.indexOf('--port');
+const parsed = portFlag === -1 ? 8080 : Number(args[portFlag + 1]);
+const port = Number.isInteger(parsed) && parsed > 0 && parsed < 65536 ? parsed : 8080;
+
+const CONTENT_TYPES = new Map([
+  ['.html', 'text/html; charset=utf-8'],
+  ['.js', 'text/javascript; charset=utf-8'],
+  ['.mjs', 'text/javascript; charset=utf-8'],
+  ['.css', 'text/css; charset=utf-8'],
+  ['.json', 'application/json; charset=utf-8'],
+  ['.png', 'image/png'],
+  ['.jpg', 'image/jpeg'],
+  ['.jpeg', 'image/jpeg'],
+  ['.gif', 'image/gif'],
+  ['.webp', 'image/webp'],
+  ['.svg', 'image/svg+xml'],
+  ['.ico', 'image/x-icon'],
+  ['.woff', 'font/woff'],
+  ['.woff2', 'font/woff2'],
+]);
 
 const server = createServer((request, response) => {
-  let pathname = '/';
-  try {
-    pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname);
-  } catch {
-    response.writeHead(400).end('bad request');
-    return;
-  }
-  if (pathname.endsWith('/')) pathname += 'index.html';
-  const filePath = resolve(appRoot, `.${pathname}`);
+  const url = new URL(request.url ?? '/', 'http://localhost');
+  const relative = decodeURIComponent(url.pathname).replace(/^\/+/, '') || 'index.html';
+  const filePath = resolve(join(appRoot, relative));
+
   if (filePath !== appRoot && !filePath.startsWith(appRoot + sep)) {
-    response.writeHead(403).end('forbidden');
+    response.writeHead(403).end('outside app/');
     return;
   }
-  try {
-    if (!statSync(filePath).isFile()) throw new Error('not a file');
-    const body = readFileSync(filePath);
-    response.writeHead(200, {
-      'content-type': CONTENT_TYPES[extname(filePath).toLowerCase()] ?? 'application/octet-stream',
-      'content-length': body.length,
-      'cache-control': 'no-store',
-    });
-    response.end(body);
-  } catch {
+  if (!existsSync(filePath) || !statSync(filePath).isFile()) {
     response.writeHead(404).end('not found');
+    return;
   }
+  response.writeHead(200, {
+    'content-type': CONTENT_TYPES.get(extname(filePath).toLowerCase()) ?? 'application/octet-stream',
+    'cache-control': 'no-store',
+  });
+  createReadStream(filePath).pipe(response);
 });
 
-server.listen(port, '127.0.0.1', () => {
-  console.log(`Vice Panels is open at http://localhost:${port}`);
+server.listen(port, () => {
+  console.log(`Vice Panels at http://localhost:${port} (serving ${appRoot})`);
 });

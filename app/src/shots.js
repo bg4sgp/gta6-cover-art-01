@@ -1,24 +1,27 @@
-// Fixed scenes for the entry's screenshots.
+// shots.js — reads the ?shot= query the screenshot list (shots.json)
+// drives, so a headless capture can open the app straight onto a finished
+// cover or a loaded editor without clicking through it.
 //
-// ?shot=cover renders one exported cover alone on the page at its full
-// export size; ?shot=editor shows the editor with the sample photos loaded.
-// Query parameters size, layout, grade, caption and subtitle dress the scene.
-// Once the cover is painted, window.__shotReady is set so the screenshot
-// tooling knows the frame is final.
+//   ?shot=cover&size=portrait&grade=neon&caption=Neon%20Reign&subtitle=Vice%20City
+//   ?shot=editor
+//
+// In cover mode the chrome hides itself (body.shot-cover) and the canvas
+// fills the window at the export size named. In editor mode the two sample
+// photos are loaded and placed, as if the maker had just added them.
 
-export async function prepareShot(shot, params, studio) {
-  if (params.get('size')) studio.state.sizeKey = params.get('size');
-  if (params.get('layout')) studio.state.layout = params.get('layout');
-  if (params.get('grade')) studio.state.grade = params.get('grade');
-  if (params.get('caption')) studio.setCaption(params.get('caption'));
-  if (params.get('subtitle')) studio.setSubtitle(params.get('subtitle'));
-  studio.syncSizeButtons();
-  await studio.loadDefaults();
-  if (shot === 'cover') document.body.classList.add('shot-cover');
-  studio.redraw();
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      window.__shotReady = true;
-    });
-  });
+export function parseShot(search) {
+  const params = new URLSearchParams(search || '');
+  const mode = params.get('shot');
+  if (!mode) return null;
+  const shot = { mode };
+  for (const key of ['size', 'layout', 'grade', 'caption', 'subtitle']) {
+    if (params.get(key)) shot[key] = params.get(key);
+  }
+  return shot;
 }
+
+// The sample photos bundled with the app, by the short names shots use.
+export const SAMPLE_URLS = {
+  pier: 'samples/pier.jpg',
+  boulevard: 'samples/boulevard.jpg',
+};

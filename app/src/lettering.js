@@ -1,101 +1,137 @@
-// Caption lettering for Vice Panels covers.
+// lettering.js — the cover's type: a stacked-word display caption and a
+// gold letter-spaced subtitle on a dark band.
 //
-// The caption is stacked word by word in the top-left corner, the way poster
-// art stacks a title: heavy capitals with a dark keyline, a soft shadow, and
-// a warm gradient running down the letterforms. Underneath sits the subtitle
-// in wide-spaced gold capitals on a dark band. All of it is drawn with the
-// browser's own heavy sans-serif -- no font file is bundled or copied from
-// anywhere.
+// Everything is drawn with the system font stack (no font files, nothing
+// borrowed): heavy weight, tight leading, each caption word on its own line,
+// a warm sunset gradient in the fill, a dark keyline around every glyph and
+// a hard offset shadow — the poster look, in an original hand.
 
-const TITLE_FONT_STACK = '"Arial Black", "Segoe UI", "Noto Sans", "Liberation Sans", sans-serif';
+export const DISPLAY_FONT_STACK =
+  "'Arial Narrow', 'Helvetica Neue Condensed', 'Liberation Sans Narrow', Arial, sans-serif";
+export const SUBTITLE_FONT_STACK =
+  "'Helvetica Neue', 'Segoe UI', Arial, sans-serif";
 
-/** Splits a caption into the lines it will be stacked in: one word a line, at most three. */
-export function captionLines(caption) {
-  const words = caption.trim().toUpperCase().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return [];
-  if (words.length <= 3) return words;
-  const lines = [words[0], words[1], words.slice(2).join(' ')];
-  return lines;
+const KEYLINE = '#160a12';
+const SHADOW = 'rgba(22,10,18,0.55)';
+
+// Warm gradient for caption fills: near-white at the top melting through
+// peach into sunset orange at the baseline.
+function warmFill(ctx, top, height) {
+  const g = ctx.createLinearGradient(0, top, 0, top + height);
+  g.addColorStop(0, '#fffbe8');
+  g.addColorStop(0.45, '#ffe3ae');
+  g.addColorStop(0.78, '#ffb35c');
+  g.addColorStop(1, '#ff7e3d');
+  return g;
 }
 
-/** The font size at which the widest line fits inside maxWidth, capped by maxSize. */
-function fitFontSize(ctx, lines, maxWidth, maxSize) {
-  let size = maxSize;
-  const setFont = () => {
-    ctx.font = `900 ${size}px ${TITLE_FONT_STACK}`;
-  };
-  setFont();
-  const widest = Math.max(...lines.map((line) => ctx.measureText(line).width));
-  if (widest > maxWidth) {
-    size = Math.max(14, Math.floor((size * maxWidth) / widest));
-    setFont();
-  }
-  return size;
+// Set the display font at a pixel size and return the metrics we need.
+function setDisplayFont(ctx, px) {
+  ctx.font = `900 ${px}px ${DISPLAY_FONT_STACK}`;
+  ctx.textBaseline = 'alphabetic';
+  return px;
 }
 
-/**
- * Draws the caption and subtitle in the top-left of a W x H cover.
- * Returns nothing; call it after the panels and the colour grade are down.
- */
-export function drawTitleBlock(ctx, W, H, caption, subtitle) {
-  const lines = captionLines(caption);
-  if (lines.length === 0 && !subtitle.trim()) return;
-  const marginX = W * 0.052;
-  const topY = H * 0.045;
+// Widest word width at a given font size, used to fit the stack.
+function stackWidth(ctx, words, px) {
+  setDisplayFont(ctx, px);
+  let widest = 0;
+  for (const word of words) widest = Math.max(widest, ctx.measureText(word).width);
+  return widest;
+}
+
+// Draw the caption as a stack of words in the top-left of the canvas.
+// Returns the y just below the stack so callers can place other elements.
+export function drawCaption(ctx, caption, W, H) {
+  const words = String(caption || '')
+    .toUpperCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 4);
+  if (!words.length) return 0;
+
+  const margin = W * 0.045;
+  const maxWidth = W * 0.86;
+  // Start from a size scaled to the canvas and shrink until the widest
+  // word fits the measure.
+  let px = H * 0.155;
+  while (px > 12 && stackWidth(ctx, words, px) > maxWidth) px *= 0.94;
+  setDisplayFont(ctx, px);
+
+  const lineHeight = px * 0.94;
+  const keyline = Math.max(2, px * 0.075);
+  let baseline = margin + px * 0.82;
+
   ctx.save();
   ctx.textAlign = 'left';
-  ctx.textBaseline = 'top';
-  let cursorY = topY;
-  if (lines.length > 0) {
-    const maxSize = Math.min(W * 0.19, H * 0.13);
-    const size = fitFontSize(ctx, lines, W * 0.66, maxSize);
-    const lineHeight = size * 0.94;
-    const fill = ctx.createLinearGradient(0, cursorY, 0, cursorY + lineHeight * lines.length);
-    fill.addColorStop(0, '#ffffff');
-    fill.addColorStop(0.55, '#ffeef8');
-    fill.addColorStop(1, '#ffc7e3');
-    ctx.font = `900 ${size}px ${TITLE_FONT_STACK}`;
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#17100d';
-    ctx.lineWidth = size * 0.17;
-    ctx.shadowColor = 'rgba(10, 4, 20, 0.55)';
-    ctx.shadowBlur = size * 0.16;
-    ctx.shadowOffsetY = size * 0.07;
-    for (const line of lines) {
-      ctx.strokeText(line, marginX, cursorY);
-      ctx.fillStyle = fill;
-      ctx.fillText(line, marginX, cursorY);
-      cursorY += lineHeight;
-    }
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetY = 0;
-    cursorY += size * 0.18;
+  ctx.lineJoin = 'round';
+  for (const word of words) {
+    // Hard shadow first, then keyline, then the warm fill on top.
+    ctx.fillStyle = SHADOW;
+    ctx.fillText(word, margin + px * 0.045, baseline + px * 0.05);
+    ctx.strokeStyle = KEYLINE;
+    ctx.lineWidth = keyline * 2;
+    ctx.strokeText(word, margin, baseline);
+    ctx.fillStyle = warmFill(ctx, baseline - px * 0.82, px);
+    ctx.fillText(word, margin, baseline);
+    baseline += lineHeight;
   }
-  const sub = subtitle.trim().toUpperCase();
-  if (sub) {
-    const subSize = Math.min(W * 0.045, H * 0.034);
-    ctx.font = `700 ${subSize}px ${TITLE_FONT_STACK}`;
-    try {
-      ctx.letterSpacing = `${Math.round(subSize * 0.42)}px`;
-    } catch {
-      // Older engines have no canvas letterSpacing; the subtitle still reads fine.
-    }
-    const textWidth = ctx.measureText(sub).width + subSize * 0.42 * sub.length;
-    const bandPad = subSize * 0.55;
-    ctx.fillStyle = 'rgba(12, 6, 24, 0.94)';
-    ctx.fillRect(marginX - bandPad * 0.4, cursorY - subSize * 0.28, textWidth + bandPad * 1.1, subSize * 1.62);
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(10, 5, 18, 0.9)';
-    ctx.lineWidth = subSize * 0.14;
-    ctx.strokeText(sub, marginX, cursorY);
-    ctx.fillStyle = '#ffd23f';
-    ctx.fillText(sub, marginX, cursorY);
-    try {
-      ctx.letterSpacing = '0px';
-    } catch {
-      // Nothing to reset where the property does not exist.
-    }
+  ctx.restore();
+  return baseline - lineHeight + px * 0.18;
+}
+
+// Draw text with manual letter spacing, centred on cx. Canvas has no
+// portable letter-spacing on every engine version we target, so each
+// glyph is placed by hand.
+export function drawSpacedText(ctx, text, cx, baseline, spacing) {
+  const chars = [...String(text)];
+  if (!chars.length) return;
+  let total = 0;
+  const widths = chars.map((ch) => {
+    const w = ctx.measureText(ch).width;
+    total += w;
+    return w;
+  });
+  total += spacing * (chars.length - 1);
+  let cursor = cx - total / 2;
+  const previousAlign = ctx.textAlign;
+  ctx.textAlign = 'left';
+  chars.forEach((ch, i) => {
+    ctx.fillText(ch, cursor, baseline);
+    cursor += widths[i] + spacing;
+  });
+  ctx.textAlign = previousAlign;
+}
+
+// The subtitle: gold, letter-spaced, uppercase, on a dark band that runs
+// the full width near the bottom of the cover.
+export function drawSubtitleBand(ctx, subtitle, W, H) {
+  const text = String(subtitle || '').toUpperCase().trim();
+  if (!text) return;
+  const bandH = H * 0.085;
+  const bandY = H - bandH;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(14,7,16,0.88)';
+  ctx.fillRect(0, bandY, W, bandH);
+  ctx.fillStyle = '#ffb35c';
+  ctx.fillRect(0, bandY, W, Math.max(2, H * 0.004));
+  ctx.fillRect(0, bandY + bandH - Math.max(2, H * 0.004), W, Math.max(2, H * 0.004));
+
+  let px = bandH * 0.46;
+  ctx.font = `700 ${px}px ${SUBTITLE_FONT_STACK}`;
+  const spacing = px * 0.42;
+  const fits = () => {
+    let total = spacing * (text.length - 1);
+    for (const ch of text) total += ctx.measureText(ch).width;
+    return total <= W * 0.9;
+  };
+  while (px > 10 && !fits()) {
+    px *= 0.92;
+    ctx.font = `700 ${px}px ${SUBTITLE_FONT_STACK}`;
   }
+  ctx.fillStyle = '#f2c14e';
+  ctx.textBaseline = 'alphabetic';
+  drawSpacedText(ctx, text, W / 2, bandY + bandH * 0.66, spacing);
   ctx.restore();
 }
